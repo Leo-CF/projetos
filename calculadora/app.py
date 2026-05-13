@@ -1,30 +1,32 @@
-import tkinter as tk
-from tkinter import font
+import customtkinter as ctk
 
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
 
 COLORS = {
     "bg":       "#0e1117",
-    "display":  "#1e222a",
+    "display":  "#161b22",
     "btn":      "#1e222a",
-    "btn_op":   "#2a2f3a",
+    "btn_op":   "#1e2d45",
     "btn_eq":   "#2dc653",
-    "btn_clr":  "#e63946",
+    "btn_clr":  "#c0392b",
     "fg":       "#ffffff",
     "fg_op":    "#7eb8f7",
     "fg_eq":    "#0e1117",
-    "fg_clr":   "#ffffff",
     "hover":    "#2e3340",
+    "hover_op": "#1e3d65",
     "hover_eq": "#25a844",
-    "result":   "#aaaaaa",
+    "hover_clr":"#e74c3c",
+    "expr":     "#6b7280",
 }
 
 
-class Calculadora(tk.Tk):
+class Calculadora(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Calculadora")
         self.resizable(False, False)
-        self.configure(bg=COLORS["bg"])
+        self.configure(fg_color=COLORS["bg"])
 
         self._expr = ""
         self._just_evaluated = False
@@ -35,66 +37,66 @@ class Calculadora(tk.Tk):
 
     # ------------------------------------------------------------------
     def _build_display(self):
-        frame = tk.Frame(self, bg=COLORS["bg"], padx=12, pady=12)
-        frame.pack(fill="x")
+        frame = ctk.CTkFrame(self, fg_color=COLORS["display"], corner_radius=12)
+        frame.pack(fill="x", padx=16, pady=(16, 8))
 
-        self._expr_var = tk.StringVar(value="")
-        self._result_var = tk.StringVar(value="0")
+        self._expr_var = ctk.StringVar(value="")
+        self._result_var = ctk.StringVar(value="0")
 
-        f_expr = font.Font(family="Segoe UI", size=11)
-        f_result = font.Font(family="Segoe UI", size=28, weight="bold")
+        ctk.CTkLabel(
+            frame, textvariable=self._expr_var,
+            font=ctk.CTkFont(family="Segoe UI", size=13),
+            text_color=COLORS["expr"], anchor="e",
+            fg_color="transparent",
+        ).pack(fill="x", padx=16, pady=(12, 0))
 
-        tk.Label(
-            frame, textvariable=self._expr_var, font=f_expr,
-            bg=COLORS["display"], fg=COLORS["result"],
-            anchor="e", width=22, padx=8, pady=4,
-        ).pack(fill="x", pady=(0, 4))
-
-        tk.Label(
-            frame, textvariable=self._result_var, font=f_result,
-            bg=COLORS["display"], fg=COLORS["fg"],
-            anchor="e", width=22, padx=8, pady=8,
-        ).pack(fill="x")
+        ctk.CTkLabel(
+            frame, textvariable=self._result_var,
+            font=ctk.CTkFont(family="Segoe UI", size=36, weight="bold"),
+            text_color=COLORS["fg"], anchor="e",
+            fg_color="transparent",
+        ).pack(fill="x", padx=16, pady=(0, 14))
 
     def _build_buttons(self):
-        frame = tk.Frame(self, bg=COLORS["bg"], padx=12, pady=8)
-        frame.pack()
+        frame = ctk.CTkFrame(self, fg_color=COLORS["bg"])
+        frame.pack(padx=12, pady=(0, 14))
+
+        PAD = 5
+        W, H = 68, 52
 
         layout = [
             [("C", "clr"), ("±", "op"), ("%", "op"), ("÷", "op")],
             [("7", "num"), ("8", "num"), ("9", "num"), ("×", "op")],
             [("4", "num"), ("5", "num"), ("6", "num"), ("−", "op")],
             [("1", "num"), ("2", "num"), ("3", "num"), ("+", "op")],
-            [("0", "num_wide"), (".", "num"),            ("=", "eq")],
+            [("0", "num_wide"), (".", "num"),           ("=", "eq")],
         ]
-
-        btn_w, btn_h = 5, 2
 
         for r, row in enumerate(layout):
             col = 0
             for text, kind in row:
                 colspan = 2 if kind == "num_wide" else 1
+                width = W * colspan + PAD * (colspan - 1)
 
                 if kind == "eq":
-                    bg, fg, hov = COLORS["btn_eq"], COLORS["fg_eq"], COLORS["hover_eq"]
+                    fg, hover, tc = COLORS["btn_eq"], COLORS["hover_eq"], COLORS["fg_eq"]
                 elif kind == "clr":
-                    bg, fg, hov = COLORS["btn_clr"], COLORS["fg_clr"], "#c62c38"
+                    fg, hover, tc = COLORS["btn_clr"], COLORS["hover_clr"], COLORS["fg"]
                 elif kind == "op":
-                    bg, fg, hov = COLORS["btn_op"], COLORS["fg_op"], COLORS["hover"]
+                    fg, hover, tc = COLORS["btn_op"], COLORS["hover_op"], COLORS["fg_op"]
                 else:
-                    bg, fg, hov = COLORS["btn"], COLORS["fg"], COLORS["hover"]
+                    fg, hover, tc = COLORS["btn"], COLORS["hover"], COLORS["fg"]
 
-                f = font.Font(family="Segoe UI", size=13, weight="bold")
-                btn = tk.Button(
-                    frame, text=text, font=f,
-                    bg=bg, fg=fg, activebackground=hov, activeforeground=fg,
-                    relief="flat", bd=0,
-                    width=btn_w * colspan + (colspan - 1),
-                    height=btn_h,
+                btn = ctk.CTkButton(
+                    frame, text=text,
+                    font=ctk.CTkFont(family="Segoe UI", size=16, weight="bold"),
+                    fg_color=fg, hover_color=hover, text_color=tc,
+                    corner_radius=10,
+                    width=width, height=H,
                     command=lambda t=text: self._on_button(t),
                 )
                 btn.grid(row=r, column=col, columnspan=colspan,
-                         padx=3, pady=3, sticky="nsew")
+                         padx=PAD // 2, pady=PAD // 2)
                 col += colspan
 
     def _bind_keyboard(self):
@@ -152,7 +154,6 @@ class Calculadora(tk.Tk):
             self._expr = ""
             self._just_evaluated = False
 
-        # prevent multiple dots in the current number
         if ch == ".":
             parts = self._expr.replace("×", "÷").replace("−", "÷").replace("+", "÷").split("÷")
             current = parts[-1] if parts else ""
@@ -171,11 +172,8 @@ class Calculadora(tk.Tk):
                 self._expr = "−"
                 self._update_preview()
             return
-
-        # replace trailing operator
         if self._expr[-1] in ("+", "−", "×", "÷"):
             self._expr = self._expr[:-1]
-
         self._expr += op
         self._update_preview()
 
@@ -235,18 +233,12 @@ class Calculadora(tk.Tk):
             .replace("÷", "/")
             .replace("−", "-")
         )
-        result = eval(sanitized, {"__builtins__": {}})  # noqa: S307
-        return result
+        return eval(sanitized, {"__builtins__": {}})  # noqa: S307
 
     def _format_num(self, val):
         if isinstance(val, float) and val.is_integer():
             val = int(val)
-        if isinstance(val, float):
-            # limit to 10 significant digits
-            formatted = f"{val:.10g}"
-        else:
-            formatted = str(val)
-        return formatted
+        return f"{val:.10g}" if isinstance(val, float) else str(val)
 
 
 if __name__ == "__main__":
